@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once('config/database.php');
+require_once('../config/database.php');
 
 // Cek login
-if(!isset($_SESSION['username'])) {
-    header("Location: login.php?message=Silakan login terlebih dahulu");
+if(!isset($_SESSION['id_user'])) {
+    header("Location: ../login.php");
     exit();
 }
 ?>
@@ -24,11 +24,11 @@ if(!isset($_SESSION['username'])) {
         }
 
         body {
-            background-color: #f0f0f0;
+            background-color: #FFF7F7;
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
             color: white;
             display: flex;
@@ -48,12 +48,27 @@ if(!isset($_SESSION['username'])) {
 
         .auth-btn {
             background-color: #fff;
-            color: #4CAF50;
+            color: #1230AE;
             padding: 8px 20px;
             border: none;
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
+        }
+
+        .logout-btn {
+            background-color: #fd0000;
+            color: #ffffff;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ec512b;
         }
 
         .container {
@@ -103,7 +118,7 @@ if(!isset($_SESSION['username'])) {
         }
 
         .submit-btn {
-            background-color: #4CAF50;
+            background-color: #0630f4;
             color: white;
             padding: 12px 25px;
             border: none;
@@ -115,7 +130,7 @@ if(!isset($_SESSION['username'])) {
         }
 
         .submit-btn:hover {
-            background-color: #45a049;
+            background-color: #1861cd;
         }
 
         .alert {
@@ -142,7 +157,7 @@ if(!isset($_SESSION['username'])) {
         <h2>Sistem Pengaduan Sekolah</h2>
         <div class="auth-buttons">
             <a href="dashboard.php" class="auth-btn">Dashboard</a>
-            <a href="logout.php" class="auth-btn">Logout</a>
+            <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </nav>
 
@@ -156,7 +171,7 @@ if(!isset($_SESSION['username'])) {
                     echo '<div class="alert alert-success">Pengaduan berhasil dikirim!</div>';
                 } else if($_GET['status'] == 'error') {
                     $message = isset($_GET['message']) ? $_GET['message'] : 'Gagal mengirim pengaduan!';
-                    echo '<div class="alert alert-error">' . htmlspecialchars($message) . '</div>';
+                    echo '<div class="alert alert-error">' . $message . '</div>';
                 }
             }
             ?>
