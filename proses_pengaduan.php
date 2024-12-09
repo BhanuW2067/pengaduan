@@ -1,18 +1,18 @@
 <?php
 session_start();
-require_once('config/database.php');
+require_once('../config/database.php');
 
 // Cek login dan NIK
-if (!isset($_SESSION['username']) || !isset($_SESSION['nik'])) {
-    header("Location: login.php?message=Silakan login terlebih dahulu");
+if (!isset($_SESSION['id_user'])) {
+    header("Location: ../login.php");
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $isi_laporan = $_POST['isi_laporan'];
     $tgl_pengaduan = date('Y-m-d');
-    $nik = $_SESSION['nik']; // NIK dari session
-    $status = '0';
+    $user = $_SESSION['id_user'];
+    $status = 'diterima';
     $foto = null;
 
     // Handle file upload
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $filetype = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
 
         if (in_array(strtolower($filetype), $allowed)) {
-            $upload_dir = 'assets/fotolaporan/';
+            $upload_dir = '../assets/fotolaporan/';
 
             $new_filename = time() . '.' . $filetype;
             $upload_path = $upload_dir . $new_filename;
@@ -38,9 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Insert pengaduan
-    $query = "INSERT INTO pengaduan (tgl_pengaduan, nik, isi_laporan, foto, status) 
-              VALUES ('$tgl_pengaduan', '$nik', '$isi_laporan', '$foto', '$status')";
+    $query = "INSERT INTO pengaduan (tgl_pengaduan, id_user, isi_laporan, foto, status) 
+              VALUES ('$tgl_pengaduan', '$user', '$isi_laporan', '$foto', '$status')";
 
     if ($conn->query($query)) {
         header("Location: pengaduan.php?status=success");
