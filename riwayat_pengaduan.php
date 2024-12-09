@@ -1,20 +1,19 @@
 <?php
 session_start();
-require_once('config/database.php');
+require_once('../config/database.php');
 
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['id_user'])) {
+    header("Location: ../login.php");
     exit();
 }
 
-// Ambil data pengaduan berdasarkan NIK user yang login
-$nik = $_SESSION['nik'];
-$query = "SELECT p.*, t.tanggapan, t.tgl_tanggapan, t.foto_tanggapan, pet.nama_petugas 
+$user = $_SESSION['id_user'];
+$query = "SELECT p.*, t.tanggapan, t.tgl_tanggapan, t.foto_tanggapan, a.nama_admin 
           FROM pengaduan p 
           LEFT JOIN tanggapan t ON p.id_pengaduan = t.id_pengaduan
-          LEFT JOIN petugas pet ON t.id_petugas = pet.id_petugas 
-          WHERE p.nik = '$nik' 
-          ORDER BY p.tgl_pengaduan DESC"; // Menghapus prepared statement
+          LEFT JOIN admin a ON t.id_admin = a.id_admin 
+          WHERE p.id_user = '$user' 
+          ORDER BY p.tgl_pengaduan DESC";
 $result = $conn->query($query);
 ?>
 
@@ -29,22 +28,23 @@ $result = $conn->query($query);
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #f0f0f0;
+            background-color: #f5f5f5;
+            color: #333;
         }
 
         .navbar {
-            background-color: #4CAF50;
-            padding: 15px 30px;
+            background-color: #1230AE;
+            padding: 10px 30px;
             margin-bottom: 30px;
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .navbar h2 {
@@ -55,45 +55,89 @@ $result = $conn->query($query);
 
         .auth-buttons {
             display: flex;
-            gap: 15px;
+            gap: 20px;
+        }
+
+        .auth-btn, .logout-btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s, transform 0.2s ease;
         }
 
         .auth-btn {
             background-color: #fff;
-            color: #4CAF50;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
+            color: #1230AE;
+        }
+
+        .auth-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .logout-btn {
+            background-color: #fd0000;
+            color: white;
+        }
+
+        .logout-btn:hover {
+            background-color: #ec512b;
+            transform: scale(1.05);
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
             text-align: center;
             color: #333;
+            margin-bottom: 25px;
+            font-size: 20px;
+        }
+
+        .export-buttons {
+            text-align: right;
             margin-bottom: 20px;
         }
 
-        .pengaduan-item {
-            border: 1px solid #ddd;
+        .btn-export {
+            padding: 10px 20px;
+            background-color: #0630f4;
+            color: white;
+            text-decoration: none;
             border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 15px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-export:hover {
+            background-color: #1861cd;
+        }
+
+        .pengaduan-item {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .pengaduan-item:hover {
+            transform: translateY(-5px);
         }
 
         .pengaduan-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .tanggal {
@@ -102,9 +146,9 @@ $result = $conn->query($query);
         }
 
         .status {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
         }
 
@@ -124,14 +168,21 @@ $result = $conn->query($query);
         }
 
         .isi-laporan {
-            margin: 10px 0;
+            margin: 15px 0;
             color: #333;
         }
 
         .foto-bukti {
-            max-width: 200px;
-            margin-top: 10px;
-            border-radius: 4px;
+            max-width: 300px; /* Mengatur ukuran gambar */
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .foto-bukti:hover {
+            transform: scale(1.05);
         }
 
         .back-link {
@@ -153,26 +204,21 @@ $result = $conn->query($query);
         }
 
         .tanggapan {
-            margin-top: 15px;
+            margin-top: 20px;
             padding-top: 15px;
             border-top: 1px solid #eee;
         }
 
         .tanggapan h4 {
             color: #333;
-            margin: 0 0 10px 0;
-            font-size: 16px;
+            margin-bottom: 15px;
+            font-size: 18px;
         }
 
         .tanggapan-content {
             background-color: #f8f9fa;
-            padding: 12px;
-            border-radius: 4px;
-        }
-
-        .tanggapan-content p {
-            margin: 0 0 10px 0;
-            color: #444;
+            padding: 15px;
+            border-radius: 6px;
         }
 
         .tanggapan-info {
@@ -187,20 +233,20 @@ $result = $conn->query($query);
         }
 
         .foto-tanggapan-container {
-            margin: 10px 0;
+            margin: 15px 0;
             text-align: center;
         }
 
         .foto-tanggapan {
             max-width: 200px;
-            border-radius: 4px;
-            margin-bottom: 8px;
+            border-radius: 8px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s ease-in-out;
         }
 
         .foto-tanggapan:hover {
-            transform: scale(1.05);
+            transform: scale(1.1);
         }
 
         .lihat-foto {
@@ -215,25 +261,6 @@ $result = $conn->query($query);
             text-decoration: underline;
         }
 
-        .export-buttons {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-
-        .btn-export {
-            display: inline-block;
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-left: 10px;
-            font-size: 14px;
-        }
-
-        .btn-export:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
@@ -241,14 +268,13 @@ $result = $conn->query($query);
         <h2>Sistem Pengaduan Sekolah</h2>
         <div class="auth-buttons">
             <a href="dashboard.php" class="auth-btn">Dashboard</a>
-            <a href="logout.php" class="auth-btn">Logout</a>
+            <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </nav>
     
     <div class="container">
         <h2>Riwayat Pengaduan</h2>
         <div class="export-buttons">
-            <a href="export_excel.php" class="btn-export">Export Excel</a>
             <a href="print_pengaduan.php" class="btn-export" target="_blank">Print</a>
         </div>
 
@@ -260,7 +286,7 @@ $result = $conn->query($query);
                         <span class="status status-<?php echo $row['status']; ?>">
                             <?php
                             switch($row['status']) {
-                                case '0':
+                                case 'diterima':
                                     echo 'Menunggu';
                                     break;
                                 case 'proses':
@@ -274,16 +300,16 @@ $result = $conn->query($query);
                         </span>
                     </div>
                     <div class="isi-laporan">
-                        <?php echo nl2br(htmlspecialchars($row['isi_laporan'])); ?>
+                        <?php echo $row['isi_laporan']; ?>
                     </div>
                     <?php if($row['foto']): ?>
-                        <img src="assets/fotolaporan/<?php echo $row['foto']; ?>" alt="Foto Bukti" class="foto-bukti">
+                        <img src="../assets/fotolaporan/<?php echo $row['foto']; ?>" alt="Foto Bukti" class="foto-bukti">
                     <?php endif; ?>
                     <?php if($row['tanggapan']): ?>
                         <div class="tanggapan">
                             <h4>Tanggapan Admin:</h4>
                             <div class="tanggapan-content">
-                                <p><?php echo htmlspecialchars($row['tanggapan']); ?></p>
+                                <p><?php echo $row['tanggapan']; ?></p>
                                 <?php if($row['foto_tanggapan']): ?>
                                     <div class="foto-tanggapan-container">
                                         <img src="assets/fototanggapan/<?php echo $row['foto_tanggapan']; ?>" alt="Foto Tanggapan" class="foto-tanggapan">
@@ -291,7 +317,7 @@ $result = $conn->query($query);
                                     </div>
                                 <?php endif; ?>
                                 <div class="tanggapan-info">
-                                    <span class="petugas">Oleh: <?php echo htmlspecialchars($row['nama_petugas']); ?></span>
+                                    <span class="petugas">Oleh: <?php echo $row['nama_admin']; ?></span>
                                     <span class="tanggal-tanggapan"><?php echo date('d F Y', strtotime($row['tgl_tanggapan'])); ?></span>
                                 </div>
                             </div>
