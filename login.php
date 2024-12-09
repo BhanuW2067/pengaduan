@@ -2,11 +2,38 @@
 session_start();
 require_once('config/database.php');
 
-if(isset($_GET['error'])) {
-    echo '<div style="color: red; padding: 10px; margin-bottom: 10px; background-color: #ffe6e6; border: 1px solid #ff9999;">';
-    echo htmlspecialchars($_GET['error']);
-    echo '</div>';
+$error_message = ''; 
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = $_POST['password'];
+
+    if (empty($email) || empty($password)) {
+        $error_message = 'Email dan password harus diisi.';
+    } else {
+        $query = "SELECT * FROM user WHERE email = '$email'";
+        $result = mysqli_query($conn, $query);
+
+        if (mysqli_num_rows($result) == 1) {
+            $user = mysqli_fetch_assoc($result);
+
+            if (md5($password) === $user['password']) {
+                $_SESSION['email'] = $email;
+                $_SESSION['id_user'] = $user['id_user'];
+                $_SESSION['nama'] = $user['nama'];
+                $_SESSION['kelas'] = $user['kelas'];
+                header("Location: siswa/dashboard.php");
+                exit();
+            } else {
+                $error_message = 'Email atau password salah.';
+            }
+        } else {
+            $error_message = 'Email atau password salah.';
+        }
+    }
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -14,7 +41,7 @@ if(isset($_GET['error'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Aplikasi Pengaduan</title>
+    <title>Login Siswa - Pengaduan</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,7 +79,7 @@ if(isset($_GET['error'])) {
             color: #666;
         }
 
-        input, select {
+        input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -63,7 +90,7 @@ if(isset($_GET['error'])) {
         button {
             width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #0630f4;
             color: white;
             border: none;
             border-radius: 4px;
@@ -71,7 +98,7 @@ if(isset($_GET['error'])) {
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #1861cd;
         }
 
         .error {
@@ -86,7 +113,7 @@ if(isset($_GET['error'])) {
         }
 
         .register-link a {
-            color: #4CAF50;
+            color: #0630f4;
             text-decoration: none;
         }
 
@@ -97,30 +124,21 @@ if(isset($_GET['error'])) {
 </head>
 <body>
     <div class="login-container">
-        <h2>Login Aplikasi Pengaduan</h2>
+        <h2>Login Siswa Pengaduan</h2>
         
-        <?php if(isset($_GET['error'])): ?>
-            <div class="error"><?php echo htmlspecialchars($_GET['error']); ?></div>
+        <?php if ($error_message): ?>
+            <div class="error"><?php echo $error_message; ?></div>
         <?php endif; ?>
 
-        <form action="proses_login.php" method="POST">
+        <form action="login_siswa.php" method="POST">
             <div class="form-group">
-                <label>Username:</label>
-                <input type="text" name="username" required>
+                <label>Email:</label>
+                <input type="email" name="email" required>
             </div>
 
             <div class="form-group">
                 <label>Password:</label>
                 <input type="password" name="password" required>
-            </div>
-
-            <div class="form-group">
-                <label>Login Sebagai:</label>
-                <select name="level" required>
-                    <option value="siswa">Siswa</option>
-                    <option value="admin">Admin</option>
-                    <option value="petugas">Petugas</option>
-                </select>
             </div>
 
             <button type="submit">Login</button>
