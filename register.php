@@ -34,7 +34,7 @@
         .register-container button {
             width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #0630f4;
             color: white;
             border: none;
             border-radius: 5px;
@@ -42,7 +42,7 @@
             margin-top: 10px;
         }
         .register-container button:hover {
-            background-color: #45a049;
+            background-color: #1861cd;
         }
         .login-link {
             text-align: center;
@@ -56,7 +56,7 @@
             color: #333;
         }
         .login-link a {
-            color: #4CAF50;
+            color: #0630f4;
             text-decoration: none;
             font-weight: bold;
         }
@@ -90,7 +90,6 @@
     <div class="register-container">
         <h2>Register</h2>
         
-        <!-- Login Link Section -->
         <div class="login-link">
             <p><strong>Sudah memiliki akun?</strong></p>
             <p>Silakan login untuk mengakses layanan pengaduan</p>
@@ -101,25 +100,22 @@
             <span>atau</span>
         </div>
 
-        <!-- Form Register -->
         <form action="proses_register.php" method="POST">
-            <input type="text" name="nik" placeholder="NIK" required>
             <input type="text" name="nama" placeholder="Nama Lengkap" required>
-            <input type="text" name="username" placeholder="Username" required>
+            <input type="text" name="kelas" placeholder="Kelas" required>
+            <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
-            <input type="text" name="telp" placeholder="No. Telepon" required>
             <button type="submit">Register</button>
         </form>
 
         <?php if(isset($_GET['error'])): ?>
-            <div class="error-message">
+            <div class="error-message" style="color: red; margin-top: 10px; text-align: center;">
                 <?php echo $_GET['error']; ?>
             </div>
         <?php endif; ?>
     </div>
 
     <script>
-        // Menghilangkan pesan error setelah 3 detik
         setTimeout(function() {
             var errorMessage = document.querySelector('.error-message');
             if(errorMessage) {
