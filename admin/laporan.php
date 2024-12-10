@@ -1,18 +1,22 @@
+
 <?php
-require_once('cek_akses.php');
+session_start();
 require_once('../config/database.php');
 
-// Filter tanggal
+if(!isset($_SESSION['id_admin'])) {
+    header("Location: ../login_admin.php");
+    exit();
+}
+
 $tgl_awal = $_GET['tgl_awal'] ?? '';
 $tgl_akhir = $_GET['tgl_akhir'] ?? '';
 $status = $_GET['status'] ?? '';
 
-// Query dasar
-$query = "SELECT p.*, m.nama as nama_siswa, t.tanggapan, t.tgl_tanggapan, pet.nama_petugas 
+$query = "SELECT p.*, u.nama as nama_siswa, t.tanggapan, t.tgl_tanggapan, a.nama_admin
           FROM pengaduan p 
-          LEFT JOIN pengaduan_siswa m ON p.nik = m.nik
+          LEFT JOIN user u ON p.id_user = u.id_user
           LEFT JOIN tanggapan t ON p.id_pengaduan = t.id_pengaduan
-          LEFT JOIN petugas pet ON t.id_petugas = pet.id_petugas 
+          LEFT JOIN admin a ON t.id_admin = a.id_admin
           WHERE 1=1";
 
 // Tambahkan filter jika ada
@@ -33,7 +37,6 @@ $result = $conn->query($query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Pengaduan</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -47,7 +50,7 @@ $result = $conn->query($query);
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
             margin-bottom: 30px;
             color: white;
@@ -253,16 +256,14 @@ $result = $conn->query($query);
                     <label>Status</label>
                     <select name="status">
                         <option value="">Semua Status</option>
-                        <option value="0" <?php echo $status === '0' ? 'selected' : ''; ?>>Menunggu</option>
+                        <option value="diterima" <?php echo $status === 'diterima' ? 'selected' : ''; ?>>Menunggu</option>
                         <option value="proses" <?php echo $status === 'proses' ? 'selected' : ''; ?>>Diproses</option>
-                        <option value="selesai" <?php echo $status === 'selesai' ? 'selected' : ''; ?>>Selesai</option>
+                        <option value="selesai" <?php echo $status === 'selesai' ? 'selected' : ''; ?>>Ditanggapi</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-filter">Filter</button>
                 <a href="laporan.php" class="btn btn-reset">Reset</a>
-                <button type="button" onclick="window.print()" class="btn btn-print">
-                    <i class="fas fa-print"></i> Cetak
-                </button>
+                <a href="print_laporan.php" class="btn btn-print" target="_blank">Print</a>
             </form>
         </div>
 
@@ -275,7 +276,7 @@ $result = $conn->query($query);
                     <th>Isi Pengaduan</th>
                     <th>Status</th>
                     <th>Tanggapan</th>
-                    <th>Petugas</th>
+                    <th>Admin</th>
                 </tr>
             </thead>
             <tbody>
@@ -285,7 +286,7 @@ $result = $conn->query($query);
                     $status_class = '';
                     $status_text = '';
                     switch($row['status']) {
-                        case '0':
+                        case 'diterima':
                             $status_class = 'status-menunggu';
                             $status_text = 'Menunggu';
                             break;
@@ -295,18 +296,18 @@ $result = $conn->query($query);
                             break;
                         case 'selesai':
                             $status_class = 'status-selesai';
-                            $status_text = 'Selesai';
+                            $status_text = 'Ditanggapi';
                             break;
                     }
                 ?>
                     <tr>
                         <td><?php echo $no++; ?></td>
                         <td><?php echo date('d/m/Y', strtotime($row['tgl_pengaduan'])); ?></td>
-                        <td><?php echo htmlspecialchars($row['nama_siswa']); ?></td>
-                        <td><?php echo htmlspecialchars($row['isi_laporan']); ?></td>
+                        <td><?php echo $row['nama_siswa']; ?></td>
+                        <td><?php echo $row['isi_laporan']; ?></td>
                         <td><span class="status-badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span></td>
-                        <td><?php echo $row['tanggapan'] ? htmlspecialchars($row['tanggapan']) : '-'; ?></td>
-                        <td><?php echo $row['nama_petugas'] ?? '-'; ?></td>
+                        <td><?php echo $row['tanggapan'] ? $row['tanggapan'] : '-'; ?></td>
+                        <td><?php echo $row['nama_admin'] ?? '-'; ?></td>
                     </tr>
                 <?php endwhile; ?>
                 <?php if($result->num_rows == 0): ?>
@@ -316,10 +317,6 @@ $result = $conn->query($query);
                 <?php endif; ?>
             </tbody>
         </table>
-
-        <a href="dashboard.php" class="back-link no-print">
-            <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
-        </a>
     </div>
 </body>
 </html> 
