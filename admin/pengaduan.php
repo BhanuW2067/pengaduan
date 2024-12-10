@@ -1,13 +1,17 @@
 <?php
-require_once('cek_akses.php');
+session_start();
 require_once('../config/database.php');
 
-// Query untuk mengambil data pengaduan dan tanggapan
-$query = "SELECT p.*, ps.nama, t.tanggapan, t.tgl_tanggapan, t.foto_tanggapan, pt.nama_petugas 
+if(!isset($_SESSION['id_admin'])) {
+    header("Location: ../login_admin.php");
+    exit();
+}
+
+$query = "SELECT p.*, u.nama, t.tanggapan, t.tgl_tanggapan, t.foto_tanggapan, a.nama_admin 
           FROM pengaduan p 
-          LEFT JOIN pengaduan_siswa ps ON p.nik = ps.nik
+          LEFT JOIN user u ON p.id_user = u.id_user
           LEFT JOIN tanggapan t ON p.id_pengaduan = t.id_pengaduan
-          LEFT JOIN petugas pt ON t.id_petugas = pt.id_petugas
+          LEFT JOIN admin a ON t.id_admin = a.id_admin
           ORDER BY p.tgl_pengaduan DESC";
 $result = $conn->query($query);
 ?>
@@ -31,7 +35,7 @@ $result = $conn->query($query);
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
             margin-bottom: 30px;
             color: white;
@@ -54,12 +58,27 @@ $result = $conn->query($query);
 
         .auth-btn {
             background-color: #fff;
-            color: #4CAF50;
+            color: #1230AE;
             padding: 8px 20px;
             border: none;
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
+        }
+
+        .logout-btn {
+            background-color: #fd0000;
+            color: #ffffff;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ec512b;
         }
 
         .container {
@@ -106,8 +125,8 @@ $result = $conn->query($query);
             display: inline-block;
         }
 
-        .status-0 { background-color: #ffc107; }
-        .status-proses { background-color: #17a2b8; }
+        .status-diterima { background-color: #fd0909; }
+        .status-proses { background-color: #f9ff04; }
         .status-selesai { background-color: #28a745; }
 
         .btn {
@@ -213,7 +232,6 @@ $result = $conn->query($query);
             cursor: not-allowed;
         }
 
-        /* Style untuk modal konfirmasi */
         .modal-confirm {
             text-align: center;
             padding: 20px;
@@ -234,16 +252,6 @@ $result = $conn->query($query);
             min-width: 100px;
         }
 
-        .export-buttons {
-            margin-bottom: 20px;
-        }
-        
-        .export-buttons .btn {
-            margin-right: 10px;
-            text-decoration: none;
-            padding: 8px 15px;
-        }
-        
         .btn-success {
             background-color: #28a745;
         }
@@ -258,21 +266,12 @@ $result = $conn->query($query);
         <h2>Sistem Pengaduan Sekolah</h2>
         <div class="auth-buttons">
             <a href="dashboard.php" class="auth-btn">Dashboard</a>
-            <a href="../logoutadmin.php" class="auth-btn">Logout</a>
+            <a href="../logoutadmin.php" class="logout-btn">Logout</a>
         </div>
     </nav>
 
     <div class="container">
         <h2>Data Pengaduan</h2>
-
-        <div class="export-buttons">
-            <a href="export_excel.php" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Export Excel
-            </a>
-            <a href="export_print.php" target="_blank" class="btn btn-danger">
-                <i class="fas fa-print"></i> Print PDF
-            </a>
-        </div>
 
         <table>
             <thead>
@@ -281,9 +280,10 @@ $result = $conn->query($query);
                     <th>Tanggal</th>
                     <th>Nama</th>
                     <th>Isi Laporan</th>
-                    <th>Foto</th>
+                    <th>Foto Laporan</th>
                     <th>Status</th>
                     <th>Tanggapan</th>
+                    <th>Foto Tanggapan</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -295,8 +295,8 @@ $result = $conn->query($query);
                 <tr>
                     <td><?php echo $no++; ?></td>
                     <td><?php echo date('d/m/Y', strtotime($row['tgl_pengaduan'])); ?></td>
-                    <td><?php echo htmlspecialchars($row['nama']); ?></td>
-                    <td><?php echo htmlspecialchars($row['isi_laporan']); ?></td>
+                    <td><?php echo $row['nama']; ?></td>
+                    <td><?php echo $row['isi_laporan']; ?></td>
                     <td>
                         <?php if($row['foto']): ?>
                             <img src="../assets/fotolaporan/<?php echo $row['foto']; ?>" 
@@ -307,14 +307,14 @@ $result = $conn->query($query);
                     </td>
                     <td>
                         <span class="status-badge status-<?php echo $row['status']; ?>">
-                            <?php echo $row['status'] === '0' ? 'Menunggu' : ($row['status'] === 'proses' ? 'Diproses' : 'Selesai'); ?>
+                            <?php echo $row['status'] === 'diterima' ? 'Menunggu' : ($row['status'] === 'proses' ? 'Diproses' : 'Selesai'); ?>
                         </span>
                     </td>
                     <td>
                         <?php if($row['tanggapan']): ?>
                             <div class="tanggapan-content">
-                                <strong>Ditanggapi oleh: <?php echo htmlspecialchars($row['nama_petugas']); ?></strong><br>
-                                <?php echo nl2br(htmlspecialchars($row['tanggapan'])); ?><br>
+                                <strong>Ditanggapi oleh: <?php echo $row['nama_admin']; ?></strong><br>
+                                <?php echo $row['tanggapan']; ?><br>
                                 <small>Tanggal: <?php echo date('d/m/Y', strtotime($row['tgl_tanggapan'])); ?></small>
                             </div>
                         <?php else: ?>
@@ -322,7 +322,15 @@ $result = $conn->query($query);
                         <?php endif; ?>
                     </td>
                     <td>
-                        <button onclick="showTanggapanForm(<?php echo htmlspecialchars(json_encode(['id_pengaduan' => $row['id_pengaduan'], 'tanggapan' => $row['tanggapan'] ?? '', 'status' => $row['status']])); ?>)" class="btn btn-primary">
+                        <?php if($row['foto_tanggapan']): ?>
+                            <img src="../assets/fototanggapan/<?php echo $row['foto_tanggapan']; ?>" 
+                                 class="foto-pengaduan" 
+                                 onclick="showImage(this.src)" 
+                                 alt="Foto Pengaduan">
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <button onclick="showTanggapanForm(<?php echo json_encode(['id_pengaduan' => $row['id_pengaduan'], 'tanggapan' => $row['tanggapan'] ?? '', 'status' => $row['status']]); ?>)" class="btn btn-primary">
                             <?php echo $row['tanggapan'] ? 'Edit Tanggapan' : 'Beri Tanggapan'; ?>
                         </button>
                         <button onclick="konfirmasiHapus(<?php echo $row['id_pengaduan']; ?>)" class="btn btn-danger">
@@ -335,13 +343,11 @@ $result = $conn->query($query);
         </table>
     </div>
 
-    <!-- Modal untuk preview gambar -->
     <div id="imageModal" class="modal">
         <span class="close" onclick="closeModal()">&times;</span>
         <img class="modal-content" id="modalImage">
     </div>
 
-    <!-- Modal untuk form tanggapan -->
     <div id="tanggapanModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeTanggapanModal()">&times;</span>
@@ -372,7 +378,6 @@ $result = $conn->query($query);
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus -->
     <div id="modalKonfirmasi" class="modal">
         <div class="modal-content modal-confirm">
             <h4>Konfirmasi Hapus</h4>
