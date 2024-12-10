@@ -1,14 +1,17 @@
 <?php
-require_once('cek_akses.php');
+session_start();
 require_once('../config/database.php');
 
-// Ambil data petugas
-$id_petugas = $_SESSION['id_petugas'];
-$query = "SELECT * FROM petugas WHERE id_petugas = $id_petugas";
-$result = $conn->query($query);
-$petugas = $result->fetch_assoc();
+if(!isset($_SESSION['id_admin'])) {
+    header("Location: ../login_admin.php");
+    exit();
+}
 
-// Ambil pesan error/success jika ada
+$id_admin = $_SESSION['id_admin'];
+$query = "SELECT * FROM admin WHERE id_admin = $id_admin";
+$result = $conn->query($query);
+$admin = $result->fetch_assoc();
+
 $error = $_GET['error'] ?? null;
 $success = $_GET['success'] ?? null;
 ?>
@@ -29,13 +32,12 @@ $success = $_GET['success'] ?? null;
         }
 
         body {
-            background-color: #f0f0f0;
+            background-color: #FFF7F7;
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
-            margin-bottom: 30px;
             color: white;
             display: flex;
             justify-content: space-between;
@@ -45,8 +47,8 @@ $success = $_GET['success'] ?? null;
 
         .navbar h2 {
             font-size: 24px;
-            color: #fff;
             margin: 0;
+            color: #ffffff ;
         }
 
         .auth-buttons {
@@ -56,7 +58,7 @@ $success = $_GET['success'] ?? null;
 
         .auth-btn {
             background-color: #fff;
-            color: #4CAF50;
+            color: #1230AE;
             padding: 8px 20px;
             border: none;
             border-radius: 5px;
@@ -66,22 +68,92 @@ $success = $_GET['success'] ?? null;
 
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 50px auto;
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
+            text-align: center;
+            margin-bottom: 20px;
             color: #333;
-            margin-bottom: 30px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
         }
 
-        .profile-section {
-            margin-bottom: 30px;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .btn-update,
+        .btn-secondary {
+            width: 100%;  
+            padding: 10px;  
+            background-color: #0630f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-update:hover,
+        .btn-secondary:hover {
+            background-color: #1861cd;  
+        }
+
+        .btn-secondary {
+            background-color: #f44336; 
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d32f2f;  
+        }
+
+
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         .profile-info {
@@ -100,74 +172,28 @@ $success = $_GET['success'] ?? null;
             color: #333;
         }
 
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
         .edit-form {
             display: none;
             margin-top: 20px;
         }
 
-        .form-group {
-            margin-bottom: 15px;
+        .edit-form h3 {
+            padding-bottom: 5px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .alert {
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
     </style>
 </head>
 <body>
-<nav class="navbar">
+    <nav class="navbar">
         <h2>Sistem Pengaduan Sekolah</h2>
         <div class="auth-buttons">
             <a href="dashboard.php" class="auth-btn">Dashboard</a>
-            <a href="../logoutadmin.php" class="auth-btn">Logout</a>
+            <a href="../logout_admin.php" class="auth-btn">Logout</a>
         </div>
     </nav>
 
@@ -185,16 +211,13 @@ $success = $_GET['success'] ?? null;
         <div class="profile-section">
             <div class="profile-info">
                 <label>Nama Lengkap:</label>
-                <span><?php echo $petugas['nama_petugas']; ?></span>
+                <span><?php echo $admin['nama_admin']; ?></span>
 
-                <label>Username:</label>
-                <span><?php echo $petugas['username']; ?></span>
-
-                <label>Level:</label>
-                <span><?php echo $petugas['level']; ?></span>
+                <label>Email:</label>
+                <span><?php echo $admin['email']; ?></span>
             </div>
 
-            <button onclick="showEditForm()" class="btn btn-primary">
+            <button onclick="showEditForm()" class="btn-update">
                 <i class="fas fa-edit"></i> Edit Profil
             </button>
         </div>
@@ -204,16 +227,16 @@ $success = $_GET['success'] ?? null;
             <form action="update_profil.php" method="POST">
                 <div class="form-group">
                     <label>Nama Lengkap:</label>
-                    <input type="text" name="nama_petugas" value="<?php echo $petugas['nama_petugas']; ?>" required>
+                    <input type="text" name="nama_admin" value="<?php echo $admin['nama_admin']; ?>" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Username:</label>
-                    <input type="text" name="username" value="<?php echo $petugas['username']; ?>" required>
+                    <label>Email:</label>
+                    <input type="text" name="email" value="<?php echo $admin['email']; ?>" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Password Baru: (Kosongkan jika tidak ingin mengubah)</label>
+                    <label>Password Baru (Opsional):</label>
                     <input type="password" name="password">
                 </div>
 
@@ -222,12 +245,14 @@ $success = $_GET['success'] ?? null;
                     <input type="password" name="konfirmasi_password">
                 </div>
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Simpan Perubahan
-                </button>
-                <button type="button" onclick="hideEditForm()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Batal
-                </button>
+                <div class="form-actions">
+                    <button type="submit" class="btn-update">
+                        <i class="fas fa-save"></i> Simpan Perubahan
+                    </button>
+                    <button type="button" onclick="hideEditForm()" class="btn-secondary">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -242,4 +267,4 @@ $success = $_GET['success'] ?? null;
         }
     </script>
 </body>
-</html> 
+</html>
