@@ -1,6 +1,9 @@
 <?php
-require_once('cek_akses.php');
-require_once('../config/database.php');
+session_start();
+if (!isset($_SESSION['id_admin'])) {
+    header("Location: ../login_admin.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -8,7 +11,7 @@ require_once('../config/database.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard <?php echo ucfirst($_SESSION['level']); ?></title>
+    <title>Dashboard Admin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +21,7 @@ require_once('../config/database.php');
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
             color: white;
             display: flex;
@@ -109,7 +112,7 @@ require_once('../config/database.php');
         }
 
         .welcome-message {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: #1230AE;
             color: white;
             padding: 30px;
             border-radius: 10px;
@@ -126,56 +129,45 @@ require_once('../config/database.php');
             color: rgba(255,255,255,0.9);
             margin: 0;
             font-size: 16px;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
-    <!-- Font Awesome untuk ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="navbar">
-        <h2>Sistem Pengaduan Sekolah</h2>
+        <h2>Pengaduan Sekolah</h2>
         <div class="user-info">
-            <span>Selamat datang, <?php echo $_SESSION['nama_petugas']; ?></span>
-            <a href="../logoutadmin.php" class="logout-btn">Logout</a>
+            <span>Selamat datang, <?php echo $_SESSION['nama_admin']; ?></span>
+            <a href="../logout_admin.php" class="logout-btn">Logout</a>
         </div>
     </div>
 
     <div class="container">
         <div class="welcome-message">
-            <h2>Dashboard <?php echo ucfirst($_SESSION['level']); ?></h2>
-            <p>Selamat datang di panel kontrol sistem pengaduan sekolah.</p>
+            <p>Selamat Datang Di Panel Admin Pengaduan Sekolah.</p>
         </div>
 
         <div class="menu-grid">
-            <!-- Menu Pengaduan - Untuk Admin & Petugas -->
             <a href="pengaduan.php" class="menu-item">
-                <i class="fas fa-clipboard-list"></i>
                 <h3>Kelola Pengaduan</h3>
-                <p>Lihat dan tanggapi pengaduan siswa</p>
+                <p>Lihat dan tanggapi pengaduan</p>
             </a>
 
-            <!-- Menu Laporan - Untuk Admin & Petugas -->
             <a href="laporan.php" class="menu-item">
-                <i class="fas fa-file-alt"></i>
                 <h3>Laporan</h3>
-                <p>Lihat dan cetak laporan pengaduan</p>
+                <p>Lihat & Cetak laporan pengaduan</p>
             </a>
 
-            <!-- Menu Profil - Untuk Admin & Petugas -->
             <a href="profil.php" class="menu-item">
-                <i class="fas fa-user-circle"></i>
                 <h3>Profil</h3>
-                <p>Kelola informasi akun</p>
+                <p>Kelola Akun</p>
             </a>
 
-            <!-- Menu Kelola Petugas - Hanya untuk Admin -->
-            <?php if($_SESSION['level'] == 'admin'): ?>
-                <a href="petugas.php" class="menu-item">
-                    <i class="fas fa-users-cog"></i>
-                    <h3>Kelola Petugas</h3>
-                    <p>Tambah dan kelola akun petugas</p>
-                </a>
-            <?php endif; ?>
+            <a href="admin.php" class="menu-item">
+                <h3>Kelola Admin</h3>
+                <p>Tambah & kelola akun Admin</p>
+            </a>
         </div>
     </div>
 </body>
