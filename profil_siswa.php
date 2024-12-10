@@ -1,15 +1,15 @@
 <?php
 session_start();
-require_once('config/database.php');
+require_once('../config/database.php');
 
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['id_user'])) {
+    header("Location: ../login.php");
     exit();
 }
 
-// Ambil data siswa dari database
-$nik = $_SESSION['nik'];
-$query = "SELECT * FROM pengaduan_siswa WHERE nik = '$nik'";
+$id_user = $_SESSION['id_user'];
+
+$query = "SELECT * FROM user WHERE id_user = '$id_user'";
 $result = $conn->query($query);
 $user = $result->fetch_assoc();
 
@@ -19,19 +19,17 @@ if (!$user) {
     exit();
 }
 
-// Proses update profil
 if (isset($_POST['update_profil'])) {
     $nama = $_POST['nama'];
-    $username = $_POST['username'];
-    $telp = $_POST['telp'];
+    $kelas = $_POST['kelas'];
+    $email = $_POST['email'];
     $password = trim($_POST['password']);
-    
-    // Siapkan query untuk update
+
     if (!empty($password)) {
         $password_hash = md5($password);
-        $query = "UPDATE pengaduan_siswa SET nama = '$nama', username = '$username', telp = '$telp', password = '$password_hash' WHERE nik = '$nik'";
+        $query = "UPDATE user SET nama = '$nama', kelas = '$kelas', email = '$email', password = '$password_hash' WHERE id_user = '$id_user'";
     } else {
-        $query = "UPDATE pengaduan_siswa SET nama = '$nama', username = '$username', telp = '$telp' WHERE nik = '$nik'";
+        $query = "UPDATE user SET nama = '$nama', kelas = '$kelas', email = '$email' WHERE id_user = '$id_user'";
     }
 
     if ($conn->query($query)) {
@@ -49,7 +47,7 @@ if (isset($_POST['update_profil'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Siswa</title>
+    <title>Profil User</title>
     <style>
         * {
             margin: 0;
@@ -59,13 +57,12 @@ if (isset($_POST['update_profil'])) {
         }
 
         body {
-            background-color: #f0f0f0;
+            background-color: #FFF7F7;
         }
 
         .navbar {
-            background-color: #4CAF50;
+            background-color: #1230AE;
             padding: 15px 30px;
-            margin-bottom: 30px;
             color: white;
             display: flex;
             justify-content: space-between;
@@ -74,9 +71,24 @@ if (isset($_POST['update_profil'])) {
         }
 
         .navbar h2 {
-            margin: 0;
             font-size: 24px;
-            color: #fff;
+            margin: 0;
+            color: #ffffff ;
+        }
+
+        .logout-btn {
+            background-color: #fd0000;
+            color: #ffffff;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ec512b;
         }
 
         .auth-buttons {
@@ -86,7 +98,7 @@ if (isset($_POST['update_profil'])) {
 
         .auth-btn {
             background-color: #fff;
-            color: #4CAF50;
+            color: #1230AE;
             padding: 8px 20px;
             border: none;
             border-radius: 5px;
@@ -95,18 +107,19 @@ if (isset($_POST['update_profil'])) {
         }
 
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
+            max-width: 700px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            padding-right: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
             text-align: center;
+            margin-bottom: 20px;
             color: #333;
-            margin-bottom: 30px;
         }
 
         .form-group {
@@ -115,46 +128,49 @@ if (isset($_POST['update_profil'])) {
 
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
+            margin-bottom: 8px;
             font-weight: bold;
+            color: #555;
         }
 
         input[type="text"],
+        input[type="email"],
         input[type="password"],
         input[type="tel"] {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            border-radius: 5px;
+            font-size: 14px;
         }
 
-        .nik-display {
-            background-color: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-            color: #666;
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #4CAF50;
         }
 
         .btn-update {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
             width: 100%;
+            padding: 10px;
+            background-color: #0630f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
             font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         .btn-update:hover {
-            background-color: #45a049;
+            background-color: #1861cd;
         }
 
         .alert {
             padding: 10px;
-            border-radius: 4px;
+            border-radius: 5px;
             margin-bottom: 20px;
         }
 
@@ -170,32 +186,24 @@ if (isset($_POST['update_profil'])) {
             border: 1px solid #f5c6cb;
         }
 
-        .back-link {
-            display: block;
+        .form-actions {
             text-align: center;
-            margin-top: 20px;
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-<nav class="navbar">
+    <nav class="navbar">
         <h2>Sistem Pengaduan Sekolah</h2>
-        <div class="auth-buttons">
+        <div class="user-info">
             <a href="dashboard.php" class="auth-btn">Dashboard</a>
-            <a href="logout.php" class="auth-btn">Logout</a>
+            <a href="../logout.php" class="logout-btn">Logout</a>
         </div>
     </nav>
 
     <div class="container">
-        <h2>Profil Siswa</h2>
+        <h2>Profil User</h2>
 
-        <?php if(isset($_SESSION['success'])): ?>
+        <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success">
                 <?php 
                     echo $_SESSION['success'];
@@ -204,7 +212,7 @@ if (isset($_POST['update_profil'])) {
             </div>
         <?php endif; ?>
 
-        <?php if(isset($_SESSION['error'])): ?>
+        <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger">
                 <?php 
                     echo $_SESSION['error'];
@@ -215,32 +223,29 @@ if (isset($_POST['update_profil'])) {
 
         <form method="POST" action="">
             <div class="form-group">
-                <label>NIK</label>
-                <div class="nik-display"><?php echo htmlspecialchars($user['nik']); ?></div>
-            </div>
-
-            <div class="form-group">
                 <label>Nama Lengkap</label>
-                <input type="text" name="nama" value="<?php echo htmlspecialchars($user['nama']); ?>" required>
+                <input type="text" name="nama" value="<?php echo $user['nama']; ?>" required>
             </div>
 
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                <label>Kelas</label>
+                <input type="text" name="kelas" value="<?php echo $user['kelas']; ?>" required>
             </div>
 
             <div class="form-group">
-                <label>No. Telepon</label>
-                <input type="tel" name="telp" value="<?php echo htmlspecialchars($user['telp']); ?>" required>
+                <label>Email</label>
+                <input type="email" name="email" value="<?php echo $user['email']; ?>" required>
             </div>
 
             <div class="form-group">
-                <label>Password Baru (Kosongkan jika tidak ingin mengubah)</label>
+                <label>Password Baru (Opsional)</label>
                 <input type="password" name="password">
             </div>
 
-            <button type="submit" name="update_profil" class="btn-update">Update Profil</button>
+            <div class="form-actions">
+                <button type="submit" name="update_profil" class="btn-update">Update Profil</button>
+            </div>
         </form>
     </div>
 </body>
-</html> 
+</html>
